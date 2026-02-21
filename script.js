@@ -500,24 +500,43 @@ function handleSceneEffects(scene) {
    ═══════════════════════════════════════════ */
 
 function playFinale() {
-    if (currentSound) gsap.to(currentSound, { volume: 0, duration: 4.5 });
+    // This runs automatically when Scene 15 starts. 
+    // It creates the atmosphere while we wait for the user to tap the button.
+    activateBloom(0.4);
+}
 
-    activateBloom(0.5);
-
+function triggerStarFormation() {
+    // This runs ONLY when "Tap to read the stars" is clicked.
+    const btn = document.getElementById("revealStarsBtn");
     const finaleDialogue = document.querySelector("#finaleScene .dialogue");
-    if (finaleDialogue) {
-        gsap.to(finaleDialogue, { opacity: 0, duration: 1.8, delay: 2.8, ease: "power1.inOut" });
+    
+    // Smoothly fade out the button and disable it
+    if (btn) {
+        btn.style.pointerEvents = "none";
+        gsap.to(btn, { opacity: 0, duration: 1.5, ease: "power1.inOut" });
     }
 
+    // Fade out ambient space sound slowly
+    if (currentSound) gsap.to(currentSound, { volume: 0, duration: 4.5 });
+
+    // Fade out the dialogue text to leave pure space
+    if (finaleDialogue) {
+        gsap.to(finaleDialogue, { opacity: 0, duration: 1.8, ease: "power1.inOut" });
+    }
+
+    // Theme music enters quietly — like a memory surfacing
     setTimeout(() => {
         audio.theme.volume = 0;
         audio.theme.play().catch(() => {});
         gsap.to(audio.theme, { volume: 0.30, duration: 6.0 });
         currentSound = audio.theme;
-    }, 2200);
+    }, 1000);
 
+    // Awaken the canvas animation
     initStarText();
-    setTimeout(() => activateBloom(0.82), 11000);
+    
+    // Deepen the bloom for the emotional climax as text becomes fully legible
+    setTimeout(() => activateBloom(0.82), 10000);
 }
 
 /* ═══════════════════════════════════════════
@@ -563,9 +582,17 @@ window.addEventListener("click", e => {
 }, { passive: true });
 
 document.addEventListener("click", e => {
+    // Intercept the final star reveal button
+    if (e.target.id === "revealStarsBtn") {
+        e.stopPropagation();
+        triggerStarFormation();
+        return;
+    }
+    
+    // Handle all other choice buttons
     if (!e.target.classList.contains("choice")) return;
     e.stopPropagation();
-    tryAdvance(true); // Fixed: Pass true since this is a choice click
+    tryAdvance(true); 
 });
 
 window.addEventListener("keydown", e => {
