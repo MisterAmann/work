@@ -1,0 +1,482 @@
+/* ═══════════════════════════════════════════════
+   CINEMATIC BIRTHDAY EXPERIENCE — style.css
+   ═══════════════════════════════════════════════ */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    overflow: hidden;
+    background: #08080a;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ─── Scene Container ────────────────────── */
+
+#scene-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ─── Scene Base ─────────────────────────── */
+
+.scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.8s ease-in-out;
+    pointer-events: none;
+}
+
+/* ─── Scene Image ────────────────────────── */
+
+.scene img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.06) translate(0, 0);
+    transition: transform 20s ease-in-out;
+    filter: saturate(0.80) brightness(0.90);
+}
+
+/* ─── Active Scene ───────────────────────── */
+
+.scene.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scene.active img {
+    transform: scale(1.12) translate(-0.8%, -0.4%);
+}
+
+.scene:nth-child(even).active img {
+    transform: scale(1.12) translate(0.8%, 0.4%);
+}
+
+/* ─── Scene Vignette — FIX: legibility ──── */
+/*
+   A tall gradient from the bottom darkens the lower third
+   of every scene, ensuring dialogue is always readable
+   even on bright white winter illustrations.
+*/
+
+.scene-vignette {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.72) 0%,
+            rgba(0, 0, 0, 0.38) 22%,
+            rgba(0, 0, 0, 0.10) 45%,
+            transparent         70%
+        );
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* ─── Dialogue ───────────────────────────── */
+
+.dialogue {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(16px, 2.2vw, 24px);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+
+    color: rgba(255, 255, 255, 0.92);
+
+    /* Secondary legibility safety net — soft blur behind text */
+    text-shadow:
+        0 1px 12px rgba(0, 0, 0, 0.80),
+        0 0   28px rgba(0, 0, 0, 0.55);
+
+    white-space: nowrap;
+    opacity: 0;
+    z-index: 20;
+    text-align: center;
+}
+
+/* ─── Choice Button — default ────────────── */
+
+.choice {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(11px, 1.3vw, 14px);
+    font-weight: 300;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.80);
+
+    padding: 11px 32px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 0;
+
+    opacity: 0;
+    cursor: pointer;
+    z-index: 50;
+    pointer-events: none;
+
+    transition:
+        opacity    2.2s ease,
+        transform  2.2s ease,
+        background 0.5s ease,
+        border-color 0.5s ease,
+        color 0.5s ease;
+}
+
+.scene.active .choice {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.choice:hover {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+/* ─── Choice Button — WARM variant ──────── */
+/*
+   Used on scene 4 "Accept the Warmth".
+   Amber-ochre palette — warm candlelight feeling.
+   Not bright, not loud — just a gentle ember glow.
+*/
+
+.choice.warm {
+    color: rgba(255, 210, 140, 0.90);
+    border-color: rgba(210, 155, 70, 0.40);
+    background: rgba(180, 100, 30, 0.10);
+
+    /* Very subtle warm glow */
+    box-shadow:
+        0 0 18px rgba(200, 130, 40, 0.12),
+        inset 0 0 12px rgba(200, 130, 40, 0.06);
+
+    text-shadow: 0 0 14px rgba(255, 190, 90, 0.35);
+}
+
+.choice.warm:hover {
+    background: rgba(180, 100, 30, 0.18);
+    border-color: rgba(210, 155, 70, 0.60);
+    box-shadow:
+        0 0 28px rgba(200, 130, 40, 0.20),
+        inset 0 0 16px rgba(200, 130, 40, 0.08);
+}
+
+/* ─── Bloom Layer ────────────────────────── */
+
+#bloom {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(150, 175, 215, 0.05) 0%, transparent 70%);
+    opacity: 0;
+    z-index: 25;
+    pointer-events: none;
+}
+
+/* ─── Particle Container ─────────────────── */
+
+#particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.particle {
+    position: absolute;
+    will-change: transform, opacity;
+}
+
+/* ─── Snow ───────────────────────────────── */
+
+.snow {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: white;
+    opacity: 0.65;
+    filter: blur(0.6px);
+}
+
+.snow.large {
+    width: 8px;
+    height: 8px;
+    opacity: 0.40;
+    filter: blur(1.4px);
+}
+
+/* ─── Storm Snow ─────────────────────────── */
+
+.snow-storm {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    opacity: 0.80;
+    filter: blur(0.3px);
+}
+
+/* ─── Cherry Blossom Petals ──────────────── */
+
+.petal {
+    width: 9px;
+    height: 7px;
+    border-radius: 50% 0 50% 0;
+    background: rgba(255, 192, 205, 0.82);
+    opacity: 0.70;
+    filter: blur(0.3px);
+}
+
+/* ─── Stars ──────────────────────────────── */
+
+.star { opacity: 0.2; }
+
+.star.dot {
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: rgba(220, 232, 255, 0.95);
+}
+
+.star.diamond {
+    width: 3px;
+    height: 3px;
+    background: rgba(205, 220, 255, 0.90);
+    transform: rotate(45deg);
+    opacity: 0.15;
+}
+
+.star.cross {
+    width: 5px;
+    height: 5px;
+    background: transparent;
+    opacity: 0.28;
+}
+
+.star.cross::before,
+.star.cross::after {
+    content: "";
+    position: absolute;
+    background: rgba(220, 235, 255, 0.90);
+}
+
+.star.cross::before {
+    width: 5px; height: 1px;
+    top: 50%; left: 0;
+    transform: translateY(-50%);
+}
+
+.star.cross::after {
+    width: 1px; height: 5px;
+    left: 50%; top: 0;
+    transform: translateX(-50%);
+}
+
+/* ─── Canvas Constellation ───────────────── */
+
+#constellation {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* ─── Progress Sliver ────────────────────── */
+
+#progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.18);
+    z-index: 150;
+    transition: width 1.8s ease;
+    pointer-events: none;
+}
+
+/* ─── Film Grain Overlay ─────────────────── */
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0.50;
+    mix-blend-mode: overlay;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE OPTIMISATIONS
+   ═══════════════════════════════════════════════ */
+
+/* ─── Prevent all browser touch behaviours ── */
+/* Stops pull-to-refresh, double-tap zoom,
+   long-press context menu — all of which would
+   break the cinematic experience on Android.   */
+
+html, body {
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* ─── Promote key layers to GPU ─────────────── */
+/* Compositing hint — keeps transitions smooth
+   on budget Snapdragon/MediaTek chips.         */
+
+.scene,
+.scene img,
+#particles,
+#constellation,
+#bloom {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* ─── Bloom — no backdrop-filter on mobile ── */
+/* backdrop-filter is extremely expensive on
+   budget GPUs. Replace with a soft overlay.   */
+
+@media (max-width: 1024px) {
+    #bloom {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: radial-gradient(
+            ellipse at center,
+            rgba(140, 170, 210, 0.18) 0%,
+            rgba(80, 110, 160, 0.10) 40%,
+            transparent 70%
+        );
+    }
+}
+
+/* ─── Touch target sizes ─────────────────────
+   44px minimum per Android/Google guidelines.
+   Budget users often have lower accuracy.     */
+
+.choice {
+    min-height: 44px;
+    min-width: 160px;
+    padding: 14px 36px;
+    font-size: clamp(12px, 3.8vw, 15px);
+}
+
+/* ─── Dialogue — larger on small screens ──── */
+
+.dialogue {
+    font-size: clamp(14px, 3.5vw, 24px);
+    bottom: 70px;
+    padding: 0 24px;
+    white-space: normal;        /* Allow wrap on narrow screens */
+    max-width: 90vw;
+    width: max-content;
+    max-width: min(90vw, 520px);
+}
+
+/* ─── Rotate Overlay ─────────────────────────
+   Shown when phone is in portrait.
+   Hidden in landscape via JS class toggle.    */
+
+#rotate-overlay {
+    position: fixed;
+    inset: 0;
+    background: #08080a;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Hidden by default on desktop */
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#rotate-overlay.visible {
+    display: flex;
+    opacity: 1;
+}
+
+#rotate-inner {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+#rotate-icon {
+    font-size: 52px;
+    margin-bottom: 20px;
+    display: block;
+    animation: rotateHint 2.5s ease-in-out infinite;
+    transform-origin: center;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes rotateHint {
+    0%   { transform: rotate(0deg);   opacity: 0.4; }
+    40%  { transform: rotate(90deg);  opacity: 0.9; }
+    60%  { transform: rotate(90deg);  opacity: 0.9; }
+    100% { transform: rotate(0deg);   opacity: 0.4; }
+}
+
+#rotate-inner p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+}
+
+#rotate-inner span {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* ─── Fullscreen — hide browser chrome gaps ─ */
+
+:fullscreen #scene-container,
+:-webkit-full-screen #scene-container {
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ─── Image — keep focal point centred ──────
+   object-position slightly up keeps characters
+   in frame when cropping on narrow landscape.  */
+
+.scene img {
+    object-position: center 35%;
+}
