@@ -87,7 +87,7 @@ body {
 
 .dialogue {
     position: absolute;
-    bottom: 110px;
+    bottom: 90px;
     left: 50%;
     transform: translateX(-50%);
 
@@ -117,7 +117,7 @@ body {
     position: absolute;
     bottom: 40px;
     left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%);
 
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(11px, 1.3vw, 14px);
@@ -136,18 +136,14 @@ body {
     z-index: 50;
     pointer-events: none;
 
-    transition:
-        opacity    2.2s ease,
-        transform  2.2s ease,
-        background 0.5s ease,
-        border-color 0.5s ease,
+    /* ONLY transition colors. GSAP will handle opacity and transform */
+    transition: 
+        background 0.5s ease, 
+        border-color 0.5s ease, 
         color 0.5s ease;
 }
 
 .scene.active .choice {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
     
     /* The 3.2s delays the fade-in until the dialogue is almost fully visible */
     transition: 
@@ -403,7 +399,7 @@ html, body {
 
 .dialogue {
     font-size: clamp(14px, 3.5vw, 24px);
-    bottom: 105px;
+    bottom: 70px;
     padding: 0 24px;
     white-space: normal;        /* Allow wrap on narrow screens */
     max-width: 90vw;

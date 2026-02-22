@@ -25,7 +25,8 @@ let isTransitioning  = false;
 let currentSound     = null;
 let particleInterval = null;
 let audioUnlocked    = false;
-let currentWeather   = null; // Added to track weather state
+let currentWeather   = null; 
+let isFormingStars   = false; 
 
 /* ─── Device / Performance Detection ────── */
 
@@ -379,7 +380,7 @@ function initStarText() {
                 y  : Math.random() * H,
                 tx : t.x + (Math.random() - 0.5) * SAMPLE_RATE,
                 ty : t.y + (Math.random() - 0.5) * SAMPLE_RATE,
-                r     : Math.pow(Math.random(), 2.2) * (1.4 * dpr) + (0.22 * dpr), // Scaled for high DPI
+                r     : Math.pow(Math.random(), 2.2) * (1.4 * dpr) + (0.22 * dpr), 
                 color : COLORS[Math.floor(Math.random() * COLORS.length)],
                 phase : Math.random() * Math.PI * 2,
                 tSpeed: 0.005 + Math.random() * 0.020,
@@ -389,10 +390,7 @@ function initStarText() {
             };
         });
 
-        let isForming = false;
         let lastFrame = 0;
-
-        setTimeout(() => { isForming = true; }, 2500);
 
         function draw(ts) {
             if (ts - lastFrame < FRAME_INTERVAL) {
@@ -401,14 +399,13 @@ function initStarText() {
             }
             lastFrame = ts;
 
-            // Soft Trail Fix using destination-out
             ctx.globalCompositeOperation = 'destination-out';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; 
             ctx.fillRect(0, 0, W, H);
             ctx.globalCompositeOperation = 'source-over';
 
             stars.forEach(s => {
-                if (isForming) {
+                if (isFormingStars) {
                     s.x += (s.tx - s.x) * s.lerp;
                     s.y += (s.ty - s.y) * s.lerp;
                 } else {
@@ -421,7 +418,7 @@ function initStarText() {
                 }
 
                 s.phase += s.tSpeed;
-                const brightness = isForming ? 0.95 : 0.58;
+                const brightness = isFormingStars ? 0.95 : 0.58;
                 const twinkle    = 0.42 + 0.58 * Math.abs(Math.sin(s.phase));
                 ctx.globalAlpha  = twinkle * brightness;
 
@@ -441,16 +438,35 @@ function initStarText() {
 }
 
 /* ═══════════════════════════════════════════
-   DIALOGUE
+   DIALOGUE & INTERACTION SEQUENCING
    ═══════════════════════════════════════════ */
 
 function animateDialogue(scene) {
     const text = scene.querySelector(".dialogue");
-    if (!text) return;
-    gsap.fromTo(text,
-        { opacity: 0, y: 6 },
-        { opacity: 1, y: 0, duration: 2.2, delay: 1.4, ease: "power1.out" }
-    );
+    const btn = scene.querySelector(".choice");
+
+    if (text) {
+        gsap.set(text, { opacity: 0, y: 6 });
+        
+        if (btn) {
+            gsap.set(btn, { opacity: 0, y: 6, pointerEvents: "none" });
+
+            gsap.to(text, { opacity: 1, y: 0, duration: 2.2, delay: 1.4, ease: "power1.out" });
+            
+            gsap.to(text, { opacity: 0, y: -4, duration: 1.5, delay: 6.5, ease: "power1.inOut" });
+            
+            gsap.to(btn, { 
+                opacity: 1, 
+                y: 0, 
+                duration: 2.2, 
+                delay: 7.5, 
+                ease: "power1.out",
+                onComplete: () => { btn.style.pointerEvents = "auto"; }
+            });
+        } else {
+            gsap.to(text, { opacity: 1, y: 0, duration: 2.2, delay: 1.4, ease: "power1.out" });
+        }
+    }
 }
 
 /* ═══════════════════════════════════════════
@@ -479,13 +495,11 @@ function activateBloom(intensity = 1) {
 function handleSceneEffects(scene) {
     const s = scene.dataset.sound;
     
-    // Audio crossfading
     if (s === "winter") crossfade(audio.winter, 0.10);
     if (s === "storm")  crossfade(audio.storm,  0.15);
     if (s === "spring") crossfade(audio.spring, 0.13);
     if (s === "space")  crossfade(audio.space,  0.10);
 
-    // Particle Tracking Fix
     if (currentWeather !== s) {
         currentWeather = s;
         if (s === "winter") startParticles("snow",       DENSITY.snow);
@@ -500,31 +514,24 @@ function handleSceneEffects(scene) {
    ═══════════════════════════════════════════ */
 
 function playFinale() {
-    // This runs automatically when Scene 15 starts. 
-    // It creates the atmosphere while we wait for the user to tap the button.
     activateBloom(0.4);
+    isFormingStars = false;
+    initStarText();
 }
 
 function triggerStarFormation() {
-    // This runs ONLY when "Tap to read the stars" is clicked.
     const btn = document.getElementById("revealStarsBtn");
-    const finaleDialogue = document.querySelector("#finaleScene .dialogue");
-    
-    // Smoothly fade out the button and disable it
     if (btn) {
         btn.style.pointerEvents = "none";
         gsap.to(btn, { opacity: 0, duration: 1.5, ease: "power1.inOut" });
     }
 
-    // Fade out ambient space sound slowly
     if (currentSound) gsap.to(currentSound, { volume: 0, duration: 4.5 });
 
-    // Fade out the dialogue text to leave pure space
-    if (finaleDialogue) {
-        gsap.to(finaleDialogue, { opacity: 0, duration: 1.8, ease: "power1.inOut" });
-    }
+    setTimeout(() => {
+        isFormingStars = true;
+    }, 2500);
 
-    // Theme music enters quietly — like a memory surfacing
     setTimeout(() => {
         audio.theme.volume = 0;
         audio.theme.play().catch(() => {});
@@ -532,10 +539,6 @@ function triggerStarFormation() {
         currentSound = audio.theme;
     }, 1000);
 
-    // Awaken the canvas animation
-    initStarText();
-    
-    // Deepen the bloom for the emotional climax as text becomes fully legible
     setTimeout(() => activateBloom(0.82), 10000);
 }
 
@@ -582,14 +585,12 @@ window.addEventListener("click", e => {
 }, { passive: true });
 
 document.addEventListener("click", e => {
-    // Intercept the final star reveal button
     if (e.target.id === "revealStarsBtn") {
         e.stopPropagation();
         triggerStarFormation();
         return;
     }
     
-    // Handle all other choice buttons
     if (!e.target.classList.contains("choice")) return;
     e.stopPropagation();
     tryAdvance(true); 
@@ -623,7 +624,7 @@ window.addEventListener("touchend", e => {
 window.addEventListener("load", () => {
     checkOrientation();
     startParticles("snow", DENSITY.snow);
-    currentWeather = "winter"; // Set initial weather state
+    currentWeather = "winter"; 
     animateDialogue(scenes[0]);
     updateProgress();
 });
