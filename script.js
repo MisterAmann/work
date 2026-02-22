@@ -616,10 +616,19 @@ window.addEventListener("touchend", e => {
 /* ═══════════════════════════════════════════
    INTRO SEQUENCE
    ─────────────────────────────────────────
-   The scarf speaks. Lines appear one by one.
-   "Tap anywhere." pulses at the end.
-   On tap: fullscreen + orientation lock fire,
-   audio unlocks, intro fades, scene 1 begins.
+   Phase 0 · "Tap to enter" — shown on load.
+             Tap calls requestFullscreen()
+             directly (required for Android).
+             Audio is primed silently here.
+
+   Phase 1 · Wait for fullscreen + landscape.
+             Rotate overlay guides the user.
+             Once both confirmed, sequence runs.
+
+   Phase 2 · Scarf lines play one by one.
+             "Tap anywhere." appears after.
+
+   Phase 3 · Tap → snow + audio + scene 1.
    ═══════════════════════════════════════════ */
 
 const introOverlay = document.getElementById("intro-overlay");
@@ -634,13 +643,107 @@ const INTRO_LINES = [
     "If you are keen to know…",
 ];
 
+let introPhase    = 0;   /* 0=entrance, 1=waiting, 2=sequence, 3=ready */
 let introComplete = false;
 
+/* ── Phase 0: Entrance prompt ───────────────
+   Shown immediately on load.
+   Single tap requests fullscreen + primes audio.
+─────────────────────────────────────────────── */
+function showEntrancePrompt() {
+    introText.textContent = "";
+    introTap.textContent  = "Tap to enter";
+    introTap.classList.add("visible");
+}
+
+function handleEntranceTap(e) {
+    if (introPhase !== 0) return;
+    if (e.type === "touchend") e.preventDefault();
+    introPhase = 1;
+
+    introTap.classList.remove("visible");
+
+    /* requestFullscreen MUST be called directly here —
+       Android requires it to be in the gesture handler itself,
+       not a nested function call away                         */
+    const el = document.documentElement;
+    const requestFS =
+        el.requestFullscreen       ||
+        el.webkitRequestFullscreen ||
+        el.mozRequestFullScreen    ||
+        el.msRequestFullscreen;
+
+    if (requestFS) {
+        requestFS.call(el)
+            .then(() => { lockLandscape(); checkReadyToBegin(); })
+            .catch(() => {
+                /* Fullscreen denied — still try to proceed */
+                checkReadyToBegin();
+            });
+    } else {
+        checkReadyToBegin();
+    }
+
+    /* Prime all audio elements silently — user gesture is live now.
+       We do NOT start winter here; that happens in Phase 3.         */
+    primAudioSilently();
+}
+
+/* ── Audio priming — separated from starting ──
+   Unlocks the audio context without playing
+   anything audible. Actual music starts later.
+─────────────────────────────────────────────── */
+function primAudioSilently() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    Object.values(audio).forEach(el => {
+        el.volume = 0;
+        el.play().then(() => el.pause()).catch(() => {});
+    });
+}
+
+/* ── Phase 1→2: Wait for fullscreen + landscape ─
+   Called after fullscreen request resolves,
+   and re-checked on orientation/resize changes.
+─────────────────────────────────────────────── */
+function checkReadyToBegin() {
+    if (introPhase !== 1) return;
+
+    const isLandscape  = window.innerWidth > window.innerHeight;
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    /* Update rotate overlay so user knows what to do */
+    if (isMobile) {
+        rotateOverlay.classList.toggle("visible", !isLandscape);
+    }
+
+    /* On mobile: need landscape. Fullscreen nice-to-have but not blocking
+       (some Android browsers restrict it — don't trap the user forever)  */
+    const readyOnMobile  = isLandscape;
+    const readyOnDesktop = true;
+
+    if (isMobile ? readyOnMobile : readyOnDesktop) {
+        introPhase = 2;
+        rotateOverlay.classList.remove("visible");
+        runIntroSequence();
+    }
+}
+
+/* Re-check whenever orientation or size changes during phase 1 */
+window.addEventListener("orientationchange", () => {
+    setTimeout(checkReadyToBegin, 350); /* Small delay — Android fires before layout settles */
+});
+window.addEventListener("resize", () => {
+    if (introPhase === 1) checkReadyToBegin();
+});
+document.addEventListener("fullscreenchange",       () => { if (introPhase === 1) checkReadyToBegin(); });
+document.addEventListener("webkitfullscreenchange", () => { if (introPhase === 1) checkReadyToBegin(); });
+
+/* ── Phase 2: Scarf lines ───────────────────── */
 function runIntroSequence() {
     let time = 0;
 
     INTRO_LINES.forEach(line => {
-        /* Fade in */
         setTimeout(() => {
             gsap.fromTo(introText,
                 { opacity: 0, y: 8 },
@@ -649,55 +752,53 @@ function runIntroSequence() {
             );
         }, time);
 
-        time += 1200;   /* fade in  */
-        time += 1800;   /* hold     */
+        time += 1200;
+        time += 1800;
 
-        /* Fade out */
         setTimeout(() => {
             gsap.to(introText, { opacity: 0, y: -6, duration: 1.0, ease: "power1.inOut" });
         }, time);
 
-        time += 1000;   /* fade out */
-        time += 400;    /* gap      */
+        time += 1000;
+        time += 400;
     });
 
-    /* "Tap anywhere." appears after all lines */
+    /* Phase 3: "Tap anywhere." */
     setTimeout(() => {
         introText.textContent = "";
+        introTap.textContent  = "Tap anywhere.";
         introTap.classList.add("visible");
+        introPhase    = 3;
         introComplete = true;
     }, time);
 }
 
+/* ── Phase 3: Dismiss → start story ────────── */
 function dismissIntro() {
     if (!introComplete) return;
 
-    /* User gesture is live right now — fullscreen + lock work here */
-    enterFullscreen();
-    unlockAndStartAudio();
-
     introOverlay.classList.add("hidden");
 
-    /* After the CSS fade completes, activate scene 1 */
     setTimeout(() => {
         introOverlay.style.display = "none";
         scenes[0].classList.add("active");
         animateDialogue(scenes[0]);
         updateProgress();
 
-        /* Start snow and winter audio here — not on load,
-           so particles don't appear before the scene is visible,
-           and audio fires for scene 1 not scene 2              */
+        /* Snow and audio start exactly when scene 1 becomes visible */
         startParticles("snow", DENSITY.snow);
         crossfade(audio.winter, 0.10);
-
     }, 1600);
 }
 
-introOverlay.addEventListener("click", dismissIntro);
+/* Entrance tap listener (Phase 0) */
+introOverlay.addEventListener("click", e => {
+    if (introPhase === 0) { handleEntranceTap(e); return; }
+    if (introPhase === 3) { dismissIntro(); }
+});
 introOverlay.addEventListener("touchend", e => {
-    e.preventDefault();
-    dismissIntro();
+    if (introPhase === 0) { handleEntranceTap(e); return; }
+    if (introPhase === 3) { e.preventDefault(); dismissIntro(); }
 }, { passive: false });
 
 /* ═══════════════════════════════════════════
@@ -707,5 +808,5 @@ introOverlay.addEventListener("touchend", e => {
 window.addEventListener("load", () => {
     checkOrientation();
     currentWeather = "winter";
-    runIntroSequence();
+    showEntrancePrompt();
 });
