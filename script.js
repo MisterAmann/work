@@ -31,7 +31,7 @@ let isFormingStars   = false;
 /* ─── Device / Performance Detection ────── */
 
 const isMobile  = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-const isBudget  = isMobile;   /* Conservative — always optimise on mobile */
+const isBudget  = isMobile;
 
 const DENSITY = {
     snow      : isBudget ? 500  : 320,
@@ -121,11 +121,10 @@ window.addEventListener("orientationchange", checkOrientation);
 /* ═══════════════════════════════════════════
    AUDIO
    ─────────────────────────────────────────
-   FIX: unlockAndStartAudio is asynchronous.
-   After Promise.allSettled resolves, we check
-   if something else (the finale) has already
-   taken over currentSound — if so, we do NOT
-   start winter, which was overwriting the theme.
+   unlockAndStartAudio is async. After
+   Promise.allSettled resolves we guard against
+   the finale having already claimed currentSound,
+   which would cause winter to overwrite theme.
    ═══════════════════════════════════════════ */
 
 function unlockAndStartAudio() {
@@ -259,11 +258,6 @@ function startTwinklingStars(count = DENSITY.starCount) {
 
 /* ═══════════════════════════════════════════
    STAR-TEXT FINALE (Canvas)
-   ─────────────────────────────────────────
-   Stars drift until isFormingStars = true,
-   then lerp toward pixel targets that spell
-   the full phrase. isFormingStars is set
-   externally by startAutomatedFinale at T=43s.
    ═══════════════════════════════════════════ */
 
 function initStarText() {
@@ -285,7 +279,6 @@ function initStarText() {
     const BASE_LERP   = isBudget ? 0.045 : 0.030;
 
     document.fonts.ready.then(() => {
-        /* ── Offscreen pixel sampling ─────────── */
         const off    = document.createElement("canvas");
         off.width    = W;
         off.height   = H;
@@ -323,7 +316,6 @@ function initStarText() {
             return;
         }
 
-        /* Fisher-Yates shuffle — organic arrival */
         for (let i = coords.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -356,7 +348,6 @@ function initStarText() {
             if (ts - lastFrame < FRAME_INTERVAL) { requestAnimationFrame(draw); return; }
             lastFrame = ts;
 
-            /* Trail fade — keeps stars visible without hard clear */
             ctx.globalCompositeOperation = "destination-out";
             ctx.fillStyle = "rgba(255,255,255,0.25)";
             ctx.fillRect(0, 0, W, H);
@@ -407,7 +398,6 @@ function animateDialogue(scene) {
     gsap.set(text, { opacity: 0, y: 6 });
 
     if (btn) {
-        /* Scene has a choice button — text fades out before button appears */
         gsap.set(btn, { opacity: 0, y: 6, pointerEvents: "none" });
         gsap.to(text, { opacity: 1, y: 0, duration: 2.2, delay: 1.4, ease: "power1.out" });
         gsap.to(text, { opacity: 0, y: -4, duration: 1.5, delay: 6.5, ease: "power1.inOut" });
@@ -463,61 +453,55 @@ function handleSceneEffects(scene) {
    AUTOMATED CINEMATIC FINALE
    ─────────────────────────────────────────
    Triggered when "Look Up" is tapped.
-   Music starts at T=0. All timings are
-   relative to that moment.
+   All timings relative to T=0 (music start).
 
    T+0s    : Theme starts. Scene 14 activates.
    T+8.5s  : Scene 15 activates. Stars drift.
-   T+18.5s : "Wait." fades in.
-   T+22s   : "Wait." fades out.
-   T+24s   : "…there was something written in light." in.
-   T+29s   : "…there was something written in light." out.
-   T+43s   : isFormingStars = true. The phrase forms.
-   T+51s   : Bloom deepens at emotional peak.
+   T+21.5s : "Wait." fades in.
+   T+25s   : "Wait." fades out.
+   T+30s   : second line fades in.
+   T+32.5s : second line fades out.
+   T+43s   : Stars form the phrase.
+   T+51s   : Bloom deepens.
    ═══════════════════════════════════════════ */
 
 function startAutomatedFinale() {
     if (isTransitioning) return;
 
-    /* Lock input — the film takes over */
     isTransitioning = true;
 
-    /* ── T+0s: Music ────────────────────────
-       FIX: We claim currentSound immediately,
-       BEFORE the unlock Promise can resolve
-       and mistakenly start winter over the theme.
+    /* ── T+0s: Claim audio immediately ──────
+       Set currentSound BEFORE the async unlock
+       Promise can resolve — prevents winter from
+       overwriting the theme ~80ms later.
     ─────────────────────────────────────────── */
     if (currentSound) {
         const fading = currentSound;
         gsap.to(fading, { volume: 0, duration: 4.5, onComplete: () => fading.pause() });
     }
 
-    audio.theme.volume     = 0;
+    audio.theme.volume      = 0;
     audio.theme.currentTime = 0;
-    currentSound = audio.theme;      /* Claim BEFORE async unlock resolves */
+    currentSound = audio.theme;
 
     audio.theme.play().catch(() => {
-        /* Retry once — covers edge case where play was called
-           a fraction too early relative to the unlock priming  */
         setTimeout(() => audio.theme.play().catch(() => {}), 150);
     });
 
     gsap.to(audio.theme, { volume: 0.35, duration: 6.0 });
 
-    /* ── T+0s: Scene 14 ────────────────────── */
+    /* ── T+0s: Scene 14 ─────────────────────── */
     scenes[currentScene].classList.remove("active");
-    currentScene++;                          /* Scene 14 */
+    currentScene++;
     const scene14 = scenes[currentScene];
     scene14.classList.add("active");
     updateProgress();
 
-    /* Scene 14 particles (space) */
     if (currentWeather !== "space") {
         currentWeather = "space";
         startTwinklingStars();
     }
 
-    /* Scene 14 dialogue — fades in then out naturally */
     const text14 = scene14.querySelector(".dialogue");
     if (text14) {
         gsap.set(text14, { opacity: 0, y: 6 });
@@ -525,68 +509,47 @@ function startAutomatedFinale() {
         gsap.to(text14, { opacity: 0, y: -4, duration: 2.0, delay: 5.5, ease: "power1.inOut" });
     }
 
-    /* ── T+8.5s: Scene 15 (Finale) ─────────── */
+    /* ── T+8.5s: Scene 15 (Finale) ──────────── */
     setTimeout(() => {
         scenes[currentScene].classList.remove("active");
-        currentScene++;                      /* Scene 15 */
+        currentScene++;
         const scene15 = scenes[currentScene];
         scene15.classList.add("active");
         updateProgress();
 
         activateBloom(0.35);
         isFormingStars = false;
-        initStarText();   /* Stars begin drifting — phrase not yet formed */
+        initStarText();
 
         const textWait  = document.getElementById("finaleText1");
         const textLight = document.getElementById("finaleText2");
         gsap.set([textWait, textLight], { opacity: 0, y: 6 });
 
-        /* T+8.5s + 10s = T+18.5s — "Wait." */
-        gsap.to(textWait, {
-            opacity: 1, y: 0, duration: 2.5,
-            delay: 10.0, ease: "power1.out"
-        });
-        /* T+8.5s + 13.5s = T+22s — fade "Wait." */
-        gsap.to(textWait, {
-            opacity: 0, y: -4, duration: 2.0,
-            delay: 13.5, ease: "power1.inOut"
-        });
+        /* "Wait." — appears at T+21.5s, gone at T+25s */
+        gsap.to(textWait, { opacity: 1, y: 0, duration: 2.5, delay: 13.0, ease: "power1.out" });
+        gsap.to(textWait, { opacity: 0, y: -4, duration: 2.0, delay: 16.5, ease: "power1.inOut" });
 
-        /* T+8.5s + 15.5s = T+24s — second line */
-        gsap.to(textLight, {
-            opacity: 1, y: 0, duration: 2.5,
-            delay: 15.5, ease: "power1.out"
-        });
-        /* T+8.5s + 20.5s = T+29s — fade second line */
-        gsap.to(textLight, {
-            opacity: 0, y: -4, duration: 2.0,
-            delay: 20.5, ease: "power1.inOut"
-        });
+        /* Second line — appears at T+30s, gone at T+32.5s */
+        gsap.to(textLight, { opacity: 1, y: 0, duration: 2.5, delay: 21.5, ease: "power1.out" });
+        gsap.to(textLight, { opacity: 0, y: -4, duration: 2.0, delay: 24.0, ease: "power1.inOut" });
 
-        /* After T+29s: pure silence visually.
-           Stars drift. Music builds. The user waits. */
+        /* Silence. Stars drift. Music builds. */
 
     }, 8500);
 
-    /* ── T+43s: THE DROP ──────────────────────
-       Stars magnetically gather into the phrase.
-       Timed to a specific moment in the music.
-    ─────────────────────────────────────────── */
-    setTimeout(() => {
-        isFormingStars = true;
-    }, 43000);
+    /* ── T+43s: Stars form the phrase ────────── */
+    setTimeout(() => { isFormingStars = true; }, 43000);
 
-    /* T+51s: Bloom deepens — the phrase is now legible */
+    /* ── T+51s: Bloom deepens ────────────────── */
     setTimeout(() => activateBloom(0.85), 51000);
 }
 
 /* ═══════════════════════════════════════════
-   SCENE TRANSITION (manual, pre-finale scenes)
+   SCENE TRANSITION (manual, pre-finale)
    ═══════════════════════════════════════════ */
 
 function showNextScene() {
     if (isTransitioning) return;
-    /* Stop before the last two scenes — finale is automated */
     if (currentScene >= TOTAL_SCENES - 3) return;
 
     isTransitioning = true;
@@ -614,18 +577,15 @@ function tryAdvance(fromChoiceClick = false) {
     showNextScene();
 }
 
-/* Tap / click anywhere */
 window.addEventListener("click", e => {
     if (e.target.classList.contains("choice")) return;
+    if (e.target.closest("#intro-overlay")) return; /* intro handles its own clicks */
     tryAdvance(false);
 }, { passive: true });
 
-/* Choice buttons */
 document.addEventListener("click", e => {
     if (!e.target.classList.contains("choice")) return;
     e.stopPropagation();
-
-    /* Scene 13 = index 12 — "Look Up" triggers the automated finale */
     if (currentScene === 12) {
         unlockAndStartAudio();
         startAutomatedFinale();
@@ -634,7 +594,6 @@ document.addEventListener("click", e => {
     }
 });
 
-/* Keyboard */
 window.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowRight") {
         e.preventDefault();
@@ -642,7 +601,6 @@ window.addEventListener("keydown", e => {
     }
 });
 
-/* Touch swipe */
 let touchStartX = 0;
 let touchStartY = 0;
 window.addEventListener("touchstart", e => {
@@ -656,23 +614,98 @@ window.addEventListener("touchend", e => {
 }, { passive: true });
 
 /* ═══════════════════════════════════════════
+   INTRO SEQUENCE
+   ─────────────────────────────────────────
+   The scarf speaks. Lines appear one by one.
+   "Tap anywhere." pulses at the end.
+   On tap: fullscreen + orientation lock fire,
+   audio unlocks, intro fades, scene 1 begins.
+   ═══════════════════════════════════════════ */
+
+const introOverlay = document.getElementById("intro-overlay");
+const introText    = document.getElementById("intro-text");
+const introTap     = document.getElementById("intro-tap");
+
+const INTRO_LINES = [
+    "Hello.",
+    "I am a scarf.",
+    "I am not alone.",
+    "I come with a story.",
+    "If you are keen to know…",
+];
+
+let introComplete = false;
+
+function runIntroSequence() {
+    let time = 0;
+
+    INTRO_LINES.forEach(line => {
+        /* Fade in */
+        setTimeout(() => {
+            gsap.fromTo(introText,
+                { opacity: 0, y: 8 },
+                { opacity: 1, y: 0, duration: 1.2, ease: "power1.out",
+                  onStart: () => { introText.textContent = line; } }
+            );
+        }, time);
+
+        time += 1200;   /* fade in  */
+        time += 1800;   /* hold     */
+
+        /* Fade out */
+        setTimeout(() => {
+            gsap.to(introText, { opacity: 0, y: -6, duration: 1.0, ease: "power1.inOut" });
+        }, time);
+
+        time += 1000;   /* fade out */
+        time += 400;    /* gap      */
+    });
+
+    /* "Tap anywhere." appears after all lines */
+    setTimeout(() => {
+        introText.textContent = "";
+        introTap.classList.add("visible");
+        introComplete = true;
+    }, time);
+}
+
+function dismissIntro() {
+    if (!introComplete) return;
+
+    /* User gesture is live right now — fullscreen + lock work here */
+    enterFullscreen();
+    unlockAndStartAudio();
+
+    introOverlay.classList.add("hidden");
+
+    /* After the CSS fade completes, activate scene 1 */
+    setTimeout(() => {
+        introOverlay.style.display = "none";
+        scenes[0].classList.add("active");
+        animateDialogue(scenes[0]);
+        updateProgress();
+
+        /* Start snow and winter audio here — not on load,
+           so particles don't appear before the scene is visible,
+           and audio fires for scene 1 not scene 2              */
+        startParticles("snow", DENSITY.snow);
+        crossfade(audio.winter, 0.10);
+
+    }, 1600);
+}
+
+introOverlay.addEventListener("click", dismissIntro);
+introOverlay.addEventListener("touchend", e => {
+    e.preventDefault();
+    dismissIntro();
+}, { passive: false });
+
+/* ═══════════════════════════════════════════
    INITIAL LOAD
    ═══════════════════════════════════════════ */
 
 window.addEventListener("load", () => {
     checkOrientation();
-    startParticles("snow", DENSITY.snow);
     currentWeather = "winter";
-    animateDialogue(scenes[0]);
-    updateProgress();
+    runIntroSequence();
 });
-
-/* Fullscreen on first interaction */
-let fullscreenRequested = false;
-function requestFullscreenOnce() {
-    if (fullscreenRequested) return;
-    fullscreenRequested = true;
-    enterFullscreen();
-}
-window.addEventListener("touchend", requestFullscreenOnce, { passive: true });
-window.addEventListener("click",    requestFullscreenOnce);

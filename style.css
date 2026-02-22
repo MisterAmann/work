@@ -61,12 +61,7 @@ body {
     transform: scale(1.12) translate(0.8%, 0.4%);
 }
 
-/* ─── Scene Vignette — FIX: legibility ──── */
-/*
-   A tall gradient from the bottom darkens the lower third
-   of every scene, ensuring dialogue is always readable
-   even on bright white winter illustrations.
-*/
+/* ─── Scene Vignette ─────────────────────── */
 
 .scene-vignette {
     position: absolute;
@@ -100,7 +95,6 @@ body {
 
     color: rgba(255, 255, 255, 0.92);
 
-    /* Secondary legibility safety net — soft blur behind text */
     text-shadow:
         0 1px 12px rgba(0, 0, 0, 0.80),
         0 0   28px rgba(0, 0, 0, 0.55);
@@ -155,18 +149,12 @@ body {
 }
 
 /* ─── Choice Button — WARM variant ──────── */
-/*
-   Used on scene 4 "Accept the Warmth".
-   Amber-ochre palette — warm candlelight feeling.
-   Not bright, not loud — just a gentle ember glow.
-*/
 
 .choice.warm {
     color: rgba(255, 210, 140, 0.90);
     border-color: rgba(210, 155, 70, 0.40);
     background: rgba(180, 100, 30, 0.10);
 
-    /* Very subtle warm glow */
     box-shadow:
         0 0 18px rgba(200, 130, 40, 0.12),
         inset 0 0 12px rgba(200, 130, 40, 0.06);
@@ -336,21 +324,12 @@ body::after {
    MOBILE OPTIMISATIONS
    ═══════════════════════════════════════════════ */
 
-/* ─── Prevent all browser touch behaviours ── */
-/* Stops pull-to-refresh, double-tap zoom,
-   long-press context menu — all of which would
-   break the cinematic experience on Android.   */
-
 html, body {
     touch-action: manipulation;
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
 }
-
-/* ─── Promote key layers to GPU ─────────────── */
-/* Compositing hint — keeps transitions smooth
-   on budget Snapdragon/MediaTek chips.         */
 
 .scene,
 .scene img,
@@ -362,10 +341,6 @@ html, body {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
-
-/* ─── Bloom — no backdrop-filter on mobile ── */
-/* backdrop-filter is extremely expensive on
-   budget GPUs. Replace with a soft overlay.   */
 
 @media (max-width: 1024px) {
     #bloom {
@@ -380,10 +355,6 @@ html, body {
     }
 }
 
-/* ─── Touch target sizes ─────────────────────
-   44px minimum per Android/Google guidelines.
-   Budget users often have lower accuracy.     */
-
 .choice {
     min-height: 44px;
     min-width: 160px;
@@ -391,33 +362,24 @@ html, body {
     font-size: clamp(12px, 3.8vw, 15px);
 }
 
-/* ─── Dialogue — larger on small screens ──── */
-
 .dialogue {
     font-size: clamp(14px, 3.5vw, 24px);
     bottom: 70px;
     padding: 0 24px;
-    white-space: normal;        /* Allow wrap on narrow screens */
-    max-width: 90vw;
-    width: max-content;
+    white-space: normal;
     max-width: min(90vw, 520px);
 }
 
-/* ─── Rotate Overlay ─────────────────────────
-   Shown when phone is in portrait.
-   Hidden in landscape via JS class toggle.    */
+/* ─── Rotate Overlay ─────────────────────── */
 
 #rotate-overlay {
     position: fixed;
     inset: 0;
     background: #08080a;
     z-index: 9999;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-
-    /* Hidden by default on desktop */
-    display: none;
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -465,27 +427,17 @@ html, body {
     color: rgba(255, 255, 255, 0.35);
 }
 
-/* ─── Fullscreen — hide browser chrome gaps ─ */
-
 :fullscreen #scene-container,
 :-webkit-full-screen #scene-container {
     width: 100vw;
     height: 100vh;
 }
 
-/* ─── Image — keep focal point centred ──────
-   object-position slightly up keeps characters
-   in frame when cropping on narrow landscape.  */
-
 .scene img {
     object-position: center 35%;
 }
 
-/* ─── Finale Text Sequencing ─────────────────
-   Both elements share .dialogue but need
-   independent stacking and wrapping control.
-   finaleText1 ("Wait.") sits slightly higher.
-   finaleText2 (long line) allows wrapping.    */
+/* ─── Finale Text Sequencing ─────────────── */
 
 #finaleText1 {
     bottom: 110px;
@@ -501,4 +453,69 @@ html, body {
     max-width: min(88vw, 560px);
     width: max-content;
     font-size: clamp(13px, 2.8vw, 22px);
+}
+
+/* ─── Intro Overlay ──────────────────────────
+   The scarf speaks before the story begins.
+   Covers everything. Fades out on tap.        */
+
+#intro-overlay {
+    position: fixed;
+    inset: 0;
+    background: #f2ede6;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 1.6s ease;
+}
+
+#intro-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#intro-text {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(18px, 3.8vw, 32px);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(40, 32, 24, 0.82);
+    letter-spacing: 0.06em;
+    text-align: center;
+    line-height: 1.8;
+    padding: 0 32px;
+    min-height: 2.4em;
+    text-shadow: none;
+}
+
+#intro-tap {
+    position: absolute;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(11px, 2.2vw, 14px);
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(40, 32, 24, 0.38);
+
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    /* No animation here — animation only activates with .visible */
+}
+
+#intro-tap.visible {
+    opacity: 1;
+    animation: introPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes introPulse {
+    0%, 100% { opacity: 0.28; }
+    50%       { opacity: 0.65; }
 }

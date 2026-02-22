@@ -25,13 +25,20 @@
     </div>
 </div>
 
+<!-- Intro — the scarf speaks before the story begins -->
+<div id="intro-overlay">
+    <div id="intro-text"></div>
+    <div id="intro-tap">Tap anywhere.</div>
+</div>
+
 <div id="scene-container">
 
     <div id="particles"></div>
     <div id="bloom"></div>
 
     <!-- 1 · Girl shivering -->
-    <div class="scene active" data-sound="winter" data-scene="1">
+    <!-- NOTE: active removed — JS adds it after intro is dismissed -->
+    <div class="scene" data-sound="winter" data-scene="1">
         <img src="assets/scene1.png" alt="">
         <div class="scene-vignette"></div>
         <div class="dialogue">Some winters feel colder…</div>
@@ -131,12 +138,12 @@
     <div class="scene" data-sound="space" data-scene="15" id="finaleScene">
         <img src="assets/scene15.png" alt="">
         <div class="scene-vignette"></div>
-        
+
         <div class="dialogue" id="finaleText1">Wait.</div>
         <div class="dialogue" id="finaleText2">…there was something written in light.</div>
 
         <canvas id="constellation"></canvas>
-    </div>  
+    </div>
 
 </div>
 
