@@ -636,11 +636,17 @@ const introText    = document.getElementById("intro-text");
 const introTap     = document.getElementById("intro-tap");
 
 const INTRO_LINES = [
-    "Hello.",
-    "I am a scarf.",
-    "I am not alone.",
-    "I come with a story.",
-    "If you are keen to know…",
+    "Hello...",
+    "Ah, forgive me.",
+    "I nearly forgot myself.",
+    "Where are my manners?",
+    "I am Scarf.",
+    "Woven with Patience.",
+    "And at last...",
+    "A story",
+    "once whispered into me",
+    "may now be told",
+    "If you wish to listen…",
 ];
 
 let introPhase    = 0;   /* 0=entrance, 1=waiting, 2=sequence, 3=ready */
@@ -747,7 +753,7 @@ function runIntroSequence() {
         setTimeout(() => {
             gsap.fromTo(introText,
                 { opacity: 0, y: 8 },
-                { opacity: 1, y: 0, duration: 1.2, ease: "power1.out",
+                { opacity: 1, y: 0, duration: 1.8, ease: "power1.out",
                   onStart: () => { introText.textContent = line; } }
             );
         }, time);
