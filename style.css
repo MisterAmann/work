@@ -117,7 +117,7 @@ body {
     position: absolute;
     bottom: 40px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(4px);
 
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(11px, 1.3vw, 14px);
@@ -136,22 +136,18 @@ body {
     z-index: 50;
     pointer-events: none;
 
-    /* ONLY transition colors. GSAP will handle opacity and transform */
-    transition: 
-        background 0.5s ease, 
-        border-color 0.5s ease, 
+    transition:
+        opacity    2.2s ease,
+        transform  2.2s ease,
+        background 0.5s ease,
+        border-color 0.5s ease,
         color 0.5s ease;
 }
 
 .scene.active .choice {
-    
-    /* The 3.2s delays the fade-in until the dialogue is almost fully visible */
-    transition: 
-        opacity    2.2s ease 3.2s, 
-        transform  2.2s ease 3.2s, 
-        background 0.5s ease 0s, 
-        border-color 0.5s ease 0s, 
-        color 0.5s ease 0s;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
 }
 
 .choice:hover {
@@ -483,4 +479,26 @@ html, body {
 
 .scene img {
     object-position: center 35%;
+}
+
+/* ─── Finale Text Sequencing ─────────────────
+   Both elements share .dialogue but need
+   independent stacking and wrapping control.
+   finaleText1 ("Wait.") sits slightly higher.
+   finaleText2 (long line) allows wrapping.    */
+
+#finaleText1 {
+    bottom: 110px;
+    z-index: 21;
+    letter-spacing: 0.18em;
+    font-size: clamp(18px, 3.2vw, 30px);
+}
+
+#finaleText2 {
+    bottom: 90px;
+    z-index: 20;
+    white-space: normal;
+    max-width: min(88vw, 560px);
+    width: max-content;
+    font-size: clamp(13px, 2.8vw, 22px);
 }
