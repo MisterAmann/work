@@ -510,36 +510,75 @@ function handleSceneEffects(scene) {
 }
 
 /* ═══════════════════════════════════════════
-   FINALE
+   AUTOMATED CINEMATIC CLIMAX
    ═══════════════════════════════════════════ */
 
-function playFinale() {
-    activateBloom(0.4);
-    isFormingStars = false;
-    initStarText();
-}
+function startAutomatedFinale() {
+    if (isTransitioning) return;
+    
+    // 1. Lock all user input. The film takes over now.
+    isTransitioning = true; 
 
-function triggerStarFormation() {
-    const btn = document.getElementById("revealStarsBtn");
-    if (btn) {
-        btn.style.pointerEvents = "none";
-        gsap.to(btn, { opacity: 0, duration: 1.5, ease: "power1.inOut" });
+    // 2. Audio Swap (T = 0s)
+    // Fade out ambient sounds, start the theme music exactly at 0:00
+    if (currentSound) gsap.to(currentSound, { volume: 0, duration: 4.5 });
+    audio.theme.volume = 0;
+    audio.theme.currentTime = 0;
+    audio.theme.play().catch(() => {});
+    gsap.to(audio.theme, { volume: 0.35, duration: 6.0 }); // Music swells
+    currentSound = audio.theme;
+
+    // 3. Move to Scene 14 ("Above the clouds...")
+    scenes[currentScene].classList.remove("active");
+    currentScene++; // Now on Scene 14
+    const scene14 = scenes[currentScene];
+    scene14.classList.add("active");
+    handleSceneEffects(scene14);
+
+    // Fade Scene 14 text in, then out
+    const text14 = scene14.querySelector(".dialogue");
+    if (text14) {
+        gsap.fromTo(text14, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 2.2, delay: 1.0 });
+        gsap.to(text14, { opacity: 0, y: -4, duration: 2.0, delay: 6.0 });
     }
 
-    if (currentSound) gsap.to(currentSound, { volume: 0, duration: 4.5 });
-
+    // 4. Move to Scene 15 (Deep Space) at T = 8.5s
     setTimeout(() => {
+        scenes[currentScene].classList.remove("active");
+        currentScene++; // Now on Scene 15 (Finale)
+        const scene15 = scenes[currentScene];
+        scene15.classList.add("active");
+        
+        // Initialize canvas (Stars begin drifting aimlessly)
+        activateBloom(0.4);
+        isFormingStars = false;
+        initStarText();
+
+        // 5. Sequence the final whispers over the drifting stars
+        const textWait = document.getElementById("finaleText1");
+        const textLight = document.getElementById("finaleText2");
+        gsap.set([textWait, textLight], { opacity: 0, y: 6 });
+
+        // "Wait." (Appears at 11s, fades at 15s)
+        gsap.to(textWait, { opacity: 1, y: 0, duration: 2.5, delay: 2.5, ease: "power1.out" });
+        gsap.to(textWait, { opacity: 0, y: -4, duration: 2.0, delay: 6.5, ease: "power1.inOut" });
+
+        // "...there was something written in light." (Appears at 19s, fades at 25s)
+        gsap.to(textLight, { opacity: 1, y: 0, duration: 2.5, delay: 10.5, ease: "power1.out" });
+        gsap.to(textLight, { opacity: 0, y: -4, duration: 2.0, delay: 16.5, ease: "power1.inOut" });
+
+        // From 25s to 43s... pure silence visually. Just drifting stars and building music.
+
+    }, 8500);
+
+    // 6. THE DROP (Exactly 43.0 seconds after music starts)
+    setTimeout(() => {
+        // The stars magnetically snap together
         isFormingStars = true;
-    }, 2500);
-
-    setTimeout(() => {
-        audio.theme.volume = 0;
-        audio.theme.play().catch(() => {});
-        gsap.to(audio.theme, { volume: 0.30, duration: 6.0 });
-        currentSound = audio.theme;
-    }, 1000);
-
-    setTimeout(() => activateBloom(0.82), 10000);
+        
+        // The glow intensifies 8 seconds after they form
+        setTimeout(() => activateBloom(0.85), 8000);
+    }, 43000); 
 }
 
 /* ═══════════════════════════════════════════
@@ -560,7 +599,6 @@ function showNextScene() {
     handleSceneEffects(next);
     updateProgress();
 
-    if (currentScene === TOTAL_SCENES - 1) playFinale();
 
     setTimeout(() => { isTransitioning = false; }, 1800);
 }
@@ -585,15 +623,16 @@ window.addEventListener("click", e => {
 }, { passive: true });
 
 document.addEventListener("click", e => {
-    if (e.target.id === "revealStarsBtn") {
-        e.stopPropagation();
-        triggerStarFormation();
-        return;
-    }
-    
     if (!e.target.classList.contains("choice")) return;
     e.stopPropagation();
-    tryAdvance(true); 
+    
+    // Scene 13 is index 12. When "Look Up" is clicked, trigger the climax sequence.
+    if (currentScene === 12) {
+        unlockAndStartAudio();
+        startAutomatedFinale();
+    } else {
+        tryAdvance(true); 
+    }
 });
 
 window.addEventListener("keydown", e => {

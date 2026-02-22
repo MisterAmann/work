@@ -484,25 +484,3 @@ html, body {
 .scene img {
     object-position: center 35%;
 }
-
-/* ─── Choice Button — STAR variant (Finale) ── */
-.choice.star-btn {
-    color: rgba(255, 255, 255, 0.90);
-    border-color: rgba(200, 220, 255, 0.25);
-    background: rgba(255, 255, 255, 0.03);
-    box-shadow: 
-        0 0 15px rgba(255, 255, 255, 0.05),
-        inset 0 0 10px rgba(255, 255, 255, 0.02);
-    animation: starTwinkleBtn 3s infinite alternate ease-in-out;
-}
-
-@keyframes starTwinkleBtn {
-    0% {
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-        border-color: rgba(200, 220, 255, 0.15);
-    }
-    100% {
-        text-shadow: 0 0 16px rgba(255, 255, 255, 0.8), 0 0 24px rgba(200, 220, 255, 0.5);
-        border-color: rgba(200, 220, 255, 0.45);
-    }
-}
