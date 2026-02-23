@@ -640,7 +640,7 @@ const INTRO_LINES = [
     "Ah, forgive me.",
     "I nearly forgot myself.",
     "Where are my manners?",
-    "I am Scarf.",
+    "I am a scarf.",
     "Woven with Patience.",
     "And at last...",
     "A story",
