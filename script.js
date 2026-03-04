@@ -636,9 +636,9 @@ const introText    = document.getElementById("intro-text");
 const introTap     = document.getElementById("intro-tap");
 
 const INTRO_LINES = [
-    "Hello...",
-    "Ah, forgive me.",
-    "I nearly forgot myself.",
+    "Oh Hello...",
+    "You found your way here",
+    "Maybe it was meant in stars?",
     "Where are my manners?",
     "I am a scarf.",
     "Woven with Patience.",
