@@ -2,6 +2,166 @@
    CINEMATIC BIRTHDAY EXPERIENCE — script.js
    ═══════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════
+   BIRTHDAY GATE
+   ─────────────────────────────────────────
+   Set the birthday below. Month is 0-indexed:
+   Jan=0  Feb=1  Mar=2  Apr=3  May=4  Jun=5
+   Jul=6  Aug=7  Sep=8  Oct=9  Nov=10 Dec=11
+   ═══════════════════════════════════════════ */
+
+const BIRTHDAY_MONTH = 1;   /* ← Change this */
+const BIRTHDAY_DAY   = 25;   /* ← Change this */
+
+(function checkBirthdayGate() {
+    const now  = new Date();
+    const isBirthday = (now.getMonth() === BIRTHDAY_MONTH && now.getDate() === BIRTHDAY_DAY);
+    if (isBirthday) return;
+
+    const midnight = new Date();
+    midnight.setDate(midnight.getDate() + 1);
+    midnight.setHours(0, 0, 0, 0);
+
+    const birthdayIsTomorrow =
+        midnight.getMonth() === BIRTHDAY_MONTH &&
+        midnight.getDate()  === BIRTHDAY_DAY;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.body.innerHTML = "";
+        document.body.style.cssText = `
+            margin:0; overflow:hidden; background:#f2ede6;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            height:100vh; font-family:'Cormorant Garamond',Georgia,serif;
+        `;
+
+        const box = document.createElement("div");
+        box.style.cssText = "text-align:center; padding:40px 32px; max-width:520px; width:100%;";
+
+        const lines = [
+            { text: "Oh. You're early.",                      delay: 0,    small: false },
+            { text: "I'm not ready yet.",                     delay: 1800, small: false },
+            { text: "Come back at midnight.",                 delay: 3400, small: false },
+            { text: "(The polar bear isn't dressed either.)", delay: 5400, small: true  },
+        ];
+
+        lines.forEach(({ text, delay, small }) => {
+            const p = document.createElement("p");
+            p.textContent = text;
+            p.style.cssText = `
+                font-size:${small ? "clamp(11px,2vw,15px)" : "clamp(18px,3.5vw,28px)"};
+                font-weight:300; font-style:italic;
+                color:${small ? "rgba(40,32,24,0.40)" : "rgba(40,32,24,0.82)"};
+                letter-spacing:0.05em; line-height:1.8; margin:0 0 0.2em;
+                opacity:0; transition:opacity 1.2s ease, transform 1.2s ease;
+                transform:translateY(8px);
+            `;
+            box.appendChild(p);
+            setTimeout(() => { p.style.opacity = "1"; p.style.transform = "translateY(0)"; }, delay);
+        });
+
+        if (birthdayIsTomorrow) {
+
+            const divider = document.createElement("div");
+            divider.style.cssText = `
+                width:1px; height:32px; background:rgba(40,32,24,0.15);
+                margin:28px auto; opacity:0; transition:opacity 1.2s ease;
+            `;
+            box.appendChild(divider);
+            setTimeout(() => { divider.style.opacity = "1"; }, 7000);
+
+            const timerWrap = document.createElement("div");
+            timerWrap.style.cssText = `
+                display:flex; gap:clamp(16px,4vw,36px);
+                align-items:flex-start; justify-content:center;
+                opacity:0; transition:opacity 1.4s ease;
+            `;
+            box.appendChild(timerWrap);
+            setTimeout(() => { timerWrap.style.opacity = "1"; }, 7200);
+
+            const style = document.createElement("style");
+            style.textContent = `
+                @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap');
+                @keyframes sepPulse { 0%,100%{opacity:0.20;} 50%{opacity:0.55;} }
+                @keyframes digitFlip {
+                    0%  {opacity:1;transform:translateY(0);}
+                    40% {opacity:0;transform:translateY(-6px);}
+                    60% {opacity:0;transform:translateY(6px);}
+                    100%{opacity:1;transform:translateY(0);}
+                }
+                .digit-flip { animation:digitFlip 0.3s ease; }
+            `;
+            document.head.appendChild(style);
+
+            const displays = {};
+            ["hours","minutes","seconds"].forEach((unit, i, arr) => {
+                const col = document.createElement("div");
+                col.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:6px;";
+
+                const num = document.createElement("span");
+                num.style.cssText = `
+                    font-size:clamp(32px,8vw,64px); font-weight:300; font-style:italic;
+                    color:rgba(40,32,24,0.85); letter-spacing:0.04em; line-height:1;
+                    font-variant-numeric:tabular-nums; min-width:2ch; display:inline-block;
+                `;
+                num.textContent = "00";
+
+                const label = document.createElement("span");
+                label.style.cssText = `
+                    font-size:clamp(9px,1.5vw,12px); font-weight:300;
+                    letter-spacing:0.22em; text-transform:uppercase;
+                    color:rgba(40,32,24,0.35);
+                `;
+                label.textContent = unit;
+
+                col.appendChild(num);
+                col.appendChild(label);
+                timerWrap.appendChild(col);
+                displays[unit] = num;
+
+                if (i < arr.length - 1) {
+                    const sep = document.createElement("span");
+                    sep.style.cssText = `
+                        font-size:clamp(24px,5vw,44px); font-weight:300;
+                        color:rgba(40,32,24,0.25); line-height:1;
+                        padding-top:clamp(4px,1vw,8px);
+                        animation:sepPulse 1s ease-in-out infinite;
+                    `;
+                    sep.textContent = "·";
+                    timerWrap.appendChild(sep);
+                }
+            });
+
+            function pad(n) { return String(n).padStart(2, "0"); }
+
+            function update(el, val) {
+                if (el.textContent === val) return;
+                el.classList.remove("digit-flip");
+                void el.offsetWidth;
+                el.classList.add("digit-flip");
+                el.textContent = val;
+                el.addEventListener("animationend", () => el.classList.remove("digit-flip"), { once: true });
+            }
+
+            function tick() {
+                const rem = midnight - Date.now();
+                if (rem <= 0) { window.location.reload(); return; }
+                const s = Math.floor(rem / 1000);
+                update(displays["hours"],   pad(Math.floor(s / 3600)));
+                update(displays["minutes"], pad(Math.floor((s % 3600) / 60)));
+                update(displays["seconds"], pad(s % 60));
+                setTimeout(tick, 1000);
+            }
+
+            setTimeout(tick, 7200);
+        }
+
+        document.body.appendChild(box);
+    });
+
+    throw new Error("Not yet.");
+})();
+
 /* ─── DOM ────────────────────────────────── */
 
 const scenes            = document.querySelectorAll(".scene");
@@ -162,46 +322,120 @@ function crossfade(toSound, targetVolume = 0.12, duration = 3.0) {
 }
 
 /* ═══════════════════════════════════════════
+   PARTICLE POOL
+   ─────────────────────────────────────────
+   Pre-allocate all particle elements once.
+   Acquire/release instead of create/destroy.
+   Eliminates DOM churn and GC pauses that
+   cause stutter on budget devices.
+
+   Pool sizes cover max concurrent particles
+   at budget intervals with headroom:
+     snow  : 500ms interval × ~12s fall = 32
+     storm : 130ms interval × ~3s  fall = 30
+     petal : 550ms interval × ~13s fall = 32
+   ═══════════════════════════════════════════ */
+
+const POOL_SIZES = { snow: 32, "snow-storm": 30, petal: 32 };
+const pools      = {};
+
+function buildPools() {
+    ["snow", "snow-storm", "petal"].forEach(type => {
+        pools[type] = [];
+        for (let i = 0; i < POOL_SIZES[type]; i++) {
+            const p = document.createElement("div");
+            p.classList.add("particle");
+
+            if (type === "snow") {
+                p.classList.add("snow");
+            } else if (type === "snow-storm") {
+                p.classList.add("snow-storm");
+            } else if (type === "petal") {
+                p.classList.add("petal");
+            }
+
+            /* Park off-screen and invisible — not yet in the container */
+            p.style.cssText = "position:absolute; opacity:0; left:-999px; top:-999px;";
+            particleContainer.appendChild(p);
+            pools[type].push({ el: p, inUse: false });
+        }
+    });
+}
+
+function acquireParticle(type) {
+    const pool = pools[type];
+    if (!pool) return null;
+    const slot = pool.find(s => !s.inUse);
+    if (!slot) return null;   /* Pool exhausted — skip this emit tick */
+    slot.inUse = true;
+    return slot;
+}
+
+function releaseParticle(slot) {
+    gsap.killTweensOf(slot.el);
+    slot.el.style.opacity   = "0";
+    slot.el.style.left      = "-999px";
+    slot.el.style.top       = "-999px";
+    slot.el.style.transform = "";
+    gsap.set(slot.el, { clearProps: "x,y,rotation" });
+    slot.inUse = false;
+}
+
+/* ═══════════════════════════════════════════
    PARTICLES
    ═══════════════════════════════════════════ */
 
+let particlesVisible = true;   /* Set false during pre-warm, true on activate */
+
 function clearParticles() {
     if (particleInterval) { clearInterval(particleInterval); particleInterval = null; }
-    particleContainer.querySelectorAll(".particle").forEach(p => {
-        gsap.to(p, { opacity: 0, duration: 1.0, onComplete: () => p.remove() });
+
+    /* Release all in-use slots back to their pools */
+    Object.values(pools).forEach(pool => {
+        pool.forEach(slot => {
+            if (slot.inUse) releaseParticle(slot);
+        });
     });
 }
 
 function createParticle(type) {
-    const p = document.createElement("div");
-    p.classList.add("particle");
+    const slot = acquireParticle(type);
+    if (!slot) return;
+    const p = slot.el;
+
+    /* Reset classes — large snow is assigned per-emit */
+    p.classList.remove("large");
+
     if (type === "snow") {
-        p.classList.add("snow");
         if (Math.random() < 0.2) p.classList.add("large");
-        p.style.left = (Math.random() * 110 - 5) + "vw";
-        p.style.top  = "-12px";
+        p.style.left    = (Math.random() * 110 - 5) + "vw";
+        p.style.top     = "-12px";
+        p.style.opacity = particlesVisible ? "0.65" : "0";
     } else if (type === "snow-storm") {
-        p.classList.add("snow-storm");
-        p.style.left = (Math.random() * 120 - 10) + "vw";
-        p.style.top  = (Math.random() * -30) + "px";
+        p.style.left    = (Math.random() * 120 - 10) + "vw";
+        p.style.top     = (Math.random() * -30) + "px";
+        p.style.opacity = particlesVisible ? "0.80" : "0";
     } else if (type === "petal") {
-        p.classList.add("petal");
         p.style.left      = (Math.random() * 110 - 5) + "vw";
         p.style.top       = "-14px";
         p.style.transform = `rotate(${Math.random() * 360}deg)`;
+        p.style.opacity   = particlesVisible ? "0.70" : "0";
     }
-    particleContainer.appendChild(p);
-    animateParticle(p, type);
+
+    animateParticle(slot, type);
 }
 
-function animateParticle(p, type) {
+function animateParticle(slot, type) {
+    const p = slot.el;
+
     if (type === "snow-storm") {
         gsap.to(p, {
             y: window.innerHeight + 80,
             x: (Math.random() - 0.5) * (isBudget ? 320 : 500),
             rotation: Math.random() * 360,
             duration: 1.6 + Math.random() * 1.4,
-            ease: "none", onComplete: () => p.remove()
+            ease: "none",
+            onComplete: () => releaseParticle(slot)
         });
         return;
     }
@@ -211,15 +445,18 @@ function animateParticle(p, type) {
             x: (Math.random() - 0.5) * (isBudget ? 160 : 260),
             rotation: `+=${Math.random() * 160 - 80}`,
             duration: 8 + Math.random() * 5,
-            ease: "sine.inOut", onComplete: () => p.remove()
+            ease: "sine.inOut",
+            onComplete: () => releaseParticle(slot)
         });
         return;
     }
+    /* snow */
     gsap.to(p, {
         y: window.innerHeight + 60,
         x: (Math.random() - 0.5) * 80,
         duration: 8 + Math.random() * 6,
-        ease: "none", onComplete: () => p.remove()
+        ease: "none",
+        onComplete: () => releaseParticle(slot)
     });
 }
 
@@ -228,6 +465,34 @@ function startParticles(type, density) {
     setTimeout(() => {
         particleInterval = setInterval(() => createParticle(type), density);
     }, 900);
+}
+
+/* ─── Pre-warm ───────────────────────────────
+   Called during intro Phase 2 (scarf sequence).
+   Runs snow invisibly so particles are already
+   mid-flight when scene 1 appears.
+   activateParticles() fades them in on cue.
+─────────────────────────────────────────────── */
+
+function prewarmParticles() {
+    particlesVisible = false;
+    currentWeather   = "winter";
+    startParticles("snow", DENSITY.snow);
+}
+
+function activateParticles() {
+    particlesVisible = true;
+
+    /* Fade in all currently drifting pool particles */
+    Object.values(pools).forEach(pool => {
+        pool.forEach(slot => {
+            if (!slot.inUse) return;
+            const target = slot.el.classList.contains("snow-storm") ? 0.80
+                         : slot.el.classList.contains("petal")      ? 0.70
+                         : 0.65;
+            gsap.to(slot.el, { opacity: target, duration: 1.2, ease: "power1.out" });
+        });
+    });
 }
 
 /* ─── Twinkling Stars (DOM layer) ─────────── */
@@ -441,7 +706,8 @@ function handleSceneEffects(scene) {
     if (s === "space")  crossfade(audio.space,  0.10);
 
     if (currentWeather !== s) {
-        currentWeather = s;
+        currentWeather   = s;
+        particlesVisible = true;   /* Always visible on manual scene transitions */
         if (s === "winter") startParticles("snow",       DENSITY.snow);
         if (s === "storm")  startParticles("snow-storm", DENSITY.storm);
         if (s === "spring") startParticles("petal",      DENSITY.petal);
@@ -470,11 +736,6 @@ function startAutomatedFinale() {
 
     isTransitioning = true;
 
-    /* ── T+0s: Claim audio immediately ──────
-       Set currentSound BEFORE the async unlock
-       Promise can resolve — prevents winter from
-       overwriting the theme ~80ms later.
-    ─────────────────────────────────────────── */
     if (currentSound) {
         const fading = currentSound;
         gsap.to(fading, { volume: 0, duration: 4.5, onComplete: () => fading.pause() });
@@ -490,7 +751,6 @@ function startAutomatedFinale() {
 
     gsap.to(audio.theme, { volume: 0.35, duration: 6.0 });
 
-    /* ── T+0s: Scene 14 ─────────────────────── */
     scenes[currentScene].classList.remove("active");
     currentScene++;
     const scene14 = scenes[currentScene];
@@ -509,7 +769,6 @@ function startAutomatedFinale() {
         gsap.to(text14, { opacity: 0, y: -4, duration: 2.0, delay: 5.5, ease: "power1.inOut" });
     }
 
-    /* ── T+8.5s: Scene 15 (Finale) ──────────── */
     setTimeout(() => {
         scenes[currentScene].classList.remove("active");
         currentScene++;
@@ -525,22 +784,14 @@ function startAutomatedFinale() {
         const textLight = document.getElementById("finaleText2");
         gsap.set([textWait, textLight], { opacity: 0, y: 6 });
 
-        /* "Wait." — appears at T+21.5s, gone at T+25s */
-        gsap.to(textWait, { opacity: 1, y: 0, duration: 2.5, delay: 13.0, ease: "power1.out" });
-        gsap.to(textWait, { opacity: 0, y: -4, duration: 2.0, delay: 16.5, ease: "power1.inOut" });
-
-        /* Second line — appears at T+30s, gone at T+32.5s */
-        gsap.to(textLight, { opacity: 1, y: 0, duration: 2.5, delay: 21.5, ease: "power1.out" });
+        gsap.to(textWait,  { opacity: 1, y: 0,  duration: 2.5, delay: 13.0, ease: "power1.out"   });
+        gsap.to(textWait,  { opacity: 0, y: -4, duration: 2.0, delay: 16.5, ease: "power1.inOut" });
+        gsap.to(textLight, { opacity: 1, y: 0,  duration: 2.5, delay: 21.5, ease: "power1.out"   });
         gsap.to(textLight, { opacity: 0, y: -4, duration: 2.0, delay: 24.0, ease: "power1.inOut" });
-
-        /* Silence. Stars drift. Music builds. */
 
     }, 8500);
 
-    /* ── T+43s: Stars form the phrase ────────── */
     setTimeout(() => { isFormingStars = true; }, 43000);
-
-    /* ── T+51s: Bloom deepens ────────────────── */
     setTimeout(() => activateBloom(0.85), 51000);
 }
 
@@ -579,7 +830,7 @@ function tryAdvance(fromChoiceClick = false) {
 
 window.addEventListener("click", e => {
     if (e.target.classList.contains("choice")) return;
-    if (e.target.closest("#intro-overlay")) return; /* intro handles its own clicks */
+    if (e.target.closest("#intro-overlay")) return;
     tryAdvance(false);
 }, { passive: true });
 
@@ -649,13 +900,9 @@ const INTRO_LINES = [
     "If you wish to listen…",
 ];
 
-let introPhase    = 0;   /* 0=entrance, 1=waiting, 2=sequence, 3=ready */
+let introPhase    = 0;
 let introComplete = false;
 
-/* ── Phase 0: Entrance prompt ───────────────
-   Shown immediately on load.
-   Single tap requests fullscreen + primes audio.
-─────────────────────────────────────────────── */
 function showEntrancePrompt() {
     introText.textContent = "";
     introTap.textContent  = "Tap to enter";
@@ -669,9 +916,6 @@ function handleEntranceTap(e) {
 
     introTap.classList.remove("visible");
 
-    /* requestFullscreen MUST be called directly here —
-       Android requires it to be in the gesture handler itself,
-       not a nested function call away                         */
     const el = document.documentElement;
     const requestFS =
         el.requestFullscreen       ||
@@ -682,23 +926,14 @@ function handleEntranceTap(e) {
     if (requestFS) {
         requestFS.call(el)
             .then(() => { lockLandscape(); checkReadyToBegin(); })
-            .catch(() => {
-                /* Fullscreen denied — still try to proceed */
-                checkReadyToBegin();
-            });
+            .catch(() => { checkReadyToBegin(); });
     } else {
         checkReadyToBegin();
     }
 
-    /* Prime all audio elements silently — user gesture is live now.
-       We do NOT start winter here; that happens in Phase 3.         */
     primAudioSilently();
 }
 
-/* ── Audio priming — separated from starting ──
-   Unlocks the audio context without playing
-   anything audible. Actual music starts later.
-─────────────────────────────────────────────── */
 function primAudioSilently() {
     if (audioUnlocked) return;
     audioUnlocked = true;
@@ -708,36 +943,25 @@ function primAudioSilently() {
     });
 }
 
-/* ── Phase 1→2: Wait for fullscreen + landscape ─
-   Called after fullscreen request resolves,
-   and re-checked on orientation/resize changes.
-─────────────────────────────────────────────── */
 function checkReadyToBegin() {
     if (introPhase !== 1) return;
 
-    const isLandscape  = window.innerWidth > window.innerHeight;
-    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const isLandscape = window.innerWidth > window.innerHeight;
 
-    /* Update rotate overlay so user knows what to do */
     if (isMobile) {
         rotateOverlay.classList.toggle("visible", !isLandscape);
     }
 
-    /* On mobile: need landscape. Fullscreen nice-to-have but not blocking
-       (some Android browsers restrict it — don't trap the user forever)  */
-    const readyOnMobile  = isLandscape;
-    const readyOnDesktop = true;
-
-    if (isMobile ? readyOnMobile : readyOnDesktop) {
+    if (isMobile ? isLandscape : true) {
         introPhase = 2;
         rotateOverlay.classList.remove("visible");
+        prewarmParticles();    /* Snow runs invisibly during scarf sequence */
         runIntroSequence();
     }
 }
 
-/* Re-check whenever orientation or size changes during phase 1 */
 window.addEventListener("orientationchange", () => {
-    setTimeout(checkReadyToBegin, 350); /* Small delay — Android fires before layout settles */
+    setTimeout(checkReadyToBegin, 350);
 });
 window.addEventListener("resize", () => {
     if (introPhase === 1) checkReadyToBegin();
@@ -745,7 +969,6 @@ window.addEventListener("resize", () => {
 document.addEventListener("fullscreenchange",       () => { if (introPhase === 1) checkReadyToBegin(); });
 document.addEventListener("webkitfullscreenchange", () => { if (introPhase === 1) checkReadyToBegin(); });
 
-/* ── Phase 2: Scarf lines ───────────────────── */
 function runIntroSequence() {
     let time = 0;
 
@@ -769,7 +992,6 @@ function runIntroSequence() {
         time += 400;
     });
 
-    /* Phase 3: "Tap anywhere." */
     setTimeout(() => {
         introText.textContent = "";
         introTap.textContent  = "Tap anywhere.";
@@ -779,7 +1001,6 @@ function runIntroSequence() {
     }, time);
 }
 
-/* ── Phase 3: Dismiss → start story ────────── */
 function dismissIntro() {
     if (!introComplete) return;
 
@@ -791,13 +1012,13 @@ function dismissIntro() {
         animateDialogue(scenes[0]);
         updateProgress();
 
-        /* Snow and audio start exactly when scene 1 becomes visible */
-        startParticles("snow", DENSITY.snow);
+        /* Particles are already mid-flight from pre-warm —
+           just fade them in and start winter audio          */
+        activateParticles();
         crossfade(audio.winter, 0.10);
     }, 1600);
 }
 
-/* Entrance tap listener (Phase 0) */
 introOverlay.addEventListener("click", e => {
     if (introPhase === 0) { handleEntranceTap(e); return; }
     if (introPhase === 3) { dismissIntro(); }
@@ -814,5 +1035,6 @@ introOverlay.addEventListener("touchend", e => {
 window.addEventListener("load", () => {
     checkOrientation();
     currentWeather = "winter";
+    buildPools();          /* Pre-allocate all particle elements once */
     showEntrancePrompt();
 });
