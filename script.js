@@ -10,9 +10,9 @@
    Jul=6  Aug=7  Sep=8  Oct=9  Nov=10 Dec=11
    ═══════════════════════════════════════════ */
 
-const BIRTHDAY_MONTH = 11;   /* ← Change this */
-const BIRTHDAY_DAY   = 25;   /* ← Change this */
-const BIRTHDAY_YEAR  = 2025;  /* ← Change this */
+const BIRTHDAY_MONTH = 2;   /* ← Change this */
+const BIRTHDAY_DAY   = 5;   /* ← Change this */
+const BIRTHDAY_YEAR  = 2026;  /* ← Change this */
 
 (function checkBirthdayGate() {
     const now  = new Date();
@@ -889,10 +889,12 @@ const introText    = document.getElementById("intro-text");
 const introTap     = document.getElementById("intro-tap");
 
 const INTRO_LINES = [
-    "Oh Hello...",
-    "You found your way here",
-    "Maybe it was meant in stars?",
-    "Where are my manners?",
+    "A secret",
+    "hidden in plain sight.",
+    "Left by the stars",
+    "for you to find.",
+    "Let us unravel",
+    "what remains.",
     "I am a scarf.",
     "Woven with Patience.",
     "And at last...",
