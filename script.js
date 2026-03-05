@@ -10,12 +10,14 @@
    Jul=6  Aug=7  Sep=8  Oct=9  Nov=10 Dec=11
    ═══════════════════════════════════════════ */
 
-const BIRTHDAY_MONTH = 1;   /* ← Change this */
+const BIRTHDAY_MONTH = 11;   /* ← Change this */
 const BIRTHDAY_DAY   = 25;   /* ← Change this */
+const BIRTHDAY_YEAR  = 2025;  /* ← Change this */
 
 (function checkBirthdayGate() {
     const now  = new Date();
-    const isBirthday = (now.getMonth() === BIRTHDAY_MONTH && now.getDate() === BIRTHDAY_DAY);
+    const birthdayThisYear = new Date(BIRTHDAY_YEAR, BIRTHDAY_MONTH, BIRTHDAY_DAY);
+    const isBirthday = now >= birthdayThisYear;
     if (isBirthday) return;
 
     const midnight = new Date();
