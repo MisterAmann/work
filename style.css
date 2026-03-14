@@ -519,3 +519,47 @@ html, body {
     0%, 100% { opacity: 0.28; }
     50%       { opacity: 0.65; }
 }
+
+/* ─── Intro text — apology vs prologue ──────
+   Apology: smaller, lighter, less italic —
+   feels like a footnote or a quiet aside.
+   Prologue: larger, fully italic, the main
+   voice of the scarf arriving properly.       */
+
+#intro-text.apology {
+    font-size: clamp(13px, 2.4vw, 20px);
+    font-style: normal;
+    font-weight: 300;
+    color: rgba(40, 32, 24, 0.50);
+    letter-spacing: 0.08em;
+}
+
+#intro-text.prologue {
+    font-size: clamp(18px, 3.8vw, 32px);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(40, 32, 24, 0.82);
+    letter-spacing: 0.06em;
+}
+
+/* ─── Intro text — apology vs prologue ──────
+   Apology: smaller, upright, muted — feels
+   like a quiet aside or a footnote.
+   Prologue: larger, italic, fully present —
+   the scarf arriving with intention.          */
+
+#intro-text.apology {
+    font-size: clamp(13px, 2.4vw, 20px);
+    font-style: normal;
+    font-weight: 300;
+    color: rgba(40, 32, 24, 0.48);
+    letter-spacing: 0.10em;
+}
+
+#intro-text.prologue {
+    font-size: clamp(18px, 3.8vw, 32px);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(40, 32, 24, 0.82);
+    letter-spacing: 0.06em;
+}

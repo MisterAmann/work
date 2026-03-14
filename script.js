@@ -10,8 +10,8 @@
    Jul=6  Aug=7  Sep=8  Oct=9  Nov=10 Dec=11
    ═══════════════════════════════════════════ */
 
-const BIRTHDAY_MONTH = 2;   /* ← Change this */
-const BIRTHDAY_DAY   = 5;   /* ← Change this */
+const BIRTHDAY_MONTH = 3;   /* ← Change this */
+const BIRTHDAY_DAY   = 15;   /* ← Change this */
 const BIRTHDAY_YEAR  = 2026;  /* ← Change this */
 
 (function checkBirthdayGate() {
@@ -552,7 +552,7 @@ function initStarText() {
         const offCtx = off.getContext("2d");
 
         const line1 = "Happy Birthday,";
-        const line2 = "Laura";
+        const line2 = "Radhey";
 
         const fs1 = Math.round(W * (isMobile ? 0.068 : 0.050));
         const fs2 = Math.round(W * (isMobile ? 0.150 : 0.115));
@@ -889,12 +889,20 @@ const introText    = document.getElementById("intro-text");
 const introTap     = document.getElementById("intro-tap");
 
 const INTRO_LINES = [
-    "A secret",
-    "hidden in plain sight.",
-    "Left by the stars",
-    "for you to find.",
-    "Let us unravel",
-    "what remains.",
+    /* ── Apology ── */
+    "Oh, before we begin…",
+    "I must confess something.",
+    "I am not fully knitted yet.",
+    "The polar bear is deeply sorry.",
+    "(Knitting is harder than it looks.)",
+    "(He has paws.)",
+    "But he tried.",
+    "And so, here we are.",
+    /* ── Prologue ── */
+    "Oh Hello...",
+    "You found your way here",
+    "Maybe it was meant in stars?",
+    "Where are my manners?",
     "I am a scarf.",
     "Woven with Patience.",
     "And at last...",
@@ -973,11 +981,18 @@ window.addEventListener("resize", () => {
 document.addEventListener("fullscreenchange",       () => { if (introPhase === 1) checkReadyToBegin(); });
 document.addEventListener("webkitfullscreenchange", () => { if (introPhase === 1) checkReadyToBegin(); });
 
+const INTRO_APOLOGY_COUNT = 8;   /* Lines before the divider — apology section */
+
 function runIntroSequence() {
     let time = 0;
 
-    INTRO_LINES.forEach(line => {
+    INTRO_LINES.forEach((line, i) => {
+        const isApology = i < INTRO_APOLOGY_COUNT;
+
         setTimeout(() => {
+            /* Switch style class before fading in */
+            introText.classList.toggle("apology", isApology);
+            introText.classList.toggle("prologue", !isApology);
             gsap.fromTo(introText,
                 { opacity: 0, y: 8 },
                 { opacity: 1, y: 0, duration: 1.8, ease: "power1.out",
@@ -993,11 +1008,14 @@ function runIntroSequence() {
         }, time);
 
         time += 1000;
-        time += 400;
+
+        /* Extra pause between apology and prologue */
+        time += (i === INTRO_APOLOGY_COUNT - 1) ? 900 : 400;
     });
 
     setTimeout(() => {
         introText.textContent = "";
+        introText.classList.remove("apology", "prologue");
         introTap.textContent  = "Tap anywhere.";
         introTap.classList.add("visible");
         introPhase    = 3;
