@@ -10,7 +10,7 @@
    Jul=6  Aug=7  Sep=8  Oct=9  Nov=10 Dec=11
    ═══════════════════════════════════════════ */
 
-const BIRTHDAY_MONTH = 3;   /* ← Change this */
+const BIRTHDAY_MONTH = 2;   /* ← Change this */
 const BIRTHDAY_DAY   = 15;   /* ← Change this */
 const BIRTHDAY_YEAR  = 2026;  /* ← Change this */
 
