@@ -823,6 +823,7 @@ function showNextScene() {
    ═══════════════════════════════════════════ */
 
 function tryAdvance(fromChoiceClick = false) {
+    if (introPhase < 3) return;                /* Block all scene input until intro is done */
     if (isMobile && rotateOverlay.classList.contains("visible")) return;
     const active = scenes[currentScene];
     if (!fromChoiceClick && active.querySelector(".choice")) return;
@@ -831,6 +832,7 @@ function tryAdvance(fromChoiceClick = false) {
 }
 
 window.addEventListener("click", e => {
+    if (introPhase < 3) return;
     if (e.target.classList.contains("choice")) return;
     if (e.target.closest("#intro-overlay")) return;
     tryAdvance(false);
@@ -839,6 +841,7 @@ window.addEventListener("click", e => {
 document.addEventListener("click", e => {
     if (!e.target.classList.contains("choice")) return;
     e.stopPropagation();
+    if (introPhase < 3) return;                /* Block choice buttons until intro is done */
     if (currentScene === 12) {
         unlockAndStartAudio();
         startAutomatedFinale();
@@ -850,6 +853,7 @@ document.addEventListener("click", e => {
 window.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowRight") {
         e.preventDefault();
+        if (introPhase < 3) return;
         tryAdvance(false);
     }
 });
@@ -863,6 +867,7 @@ window.addEventListener("touchstart", e => {
 window.addEventListener("touchend", e => {
     const dx = touchStartX - e.changedTouches[0].screenX;
     const dy = Math.abs(touchStartY - e.changedTouches[0].screenY);
+    if (introPhase < 3) return;                /* Block swipe until intro is done */
     if (dx > 40 && dy < 60) tryAdvance(false);
 }, { passive: true });
 
@@ -1031,13 +1036,16 @@ function dismissIntro() {
     setTimeout(() => {
         introOverlay.style.display = "none";
         scenes[0].classList.add("active");
-        animateDialogue(scenes[0]);
         updateProgress();
 
         /* Particles are already mid-flight from pre-warm —
            just fade them in and start winter audio          */
         activateParticles();
         crossfade(audio.winter, 0.10);
+
+        /* 2s pause before first dialogue appears —
+           let her breathe in the scene first       */
+        setTimeout(() => animateDialogue(scenes[0]), 2000);
     }, 1600);
 }
 
